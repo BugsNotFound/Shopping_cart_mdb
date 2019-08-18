@@ -1,8 +1,9 @@
 const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require("mongoose");
+
 const errorController = require("./controllers/error");
-const mongoConnect = require("./util/database").mongoConnect;
 const User = require("./models/user");
 
 const app = express();
@@ -18,9 +19,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
-    User.findById("5d5683e0e7179a084eef8178")
+    User.findById("5d58e9c8b7d1790a38e8eb41")
         .then(user => {
-            req.user = new User(user.name, user.email, user.cart, user._id);
+            req.user = user;
             next();
         })
         .catch(err => console.log(err));
@@ -33,8 +34,24 @@ app.use(shopRoutes);
 // Catch all Middleware
 app.use(errorController.get404);
 
-mongoConnect(() => {
-    app.listen(process.env.PORT || 3000, function() {
-        console.log("I am listening...");
-    });
-});
+
+mongoose.connect("mongodb://himansh:himansh1@ds163757.mlab.com:63757/shopping_cart_mvc", { useNewUrlParser: true })
+    .then(result => {
+        User.findOne()
+            .then(user => {
+                if (!user) {
+                    const user = new User({
+                        name: "Himansh",
+                        email: "himansh.jain1997@gmail.com",
+                        cart: {
+                            items: []
+                        }
+                    });
+                    user.save();
+                }
+            })
+        app.listen(process.env.PORT || 3000, function() {
+            console.log("I am listening...");
+        })
+    })
+    .catch(err => console.log(err));
